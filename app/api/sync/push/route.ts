@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { SyncPushSchema, validateRequestSize } from "@/lib/validations";
 import { ApiError, ErrorCode, withErrorHandler } from "@/lib/errors";
 import {
@@ -63,7 +64,7 @@ async function handler(req: Request): Promise<NextResponse> {
   let snapshotVersion = 0;
 
   const result = await prisma.$transaction(
-    async (tx) => {
+    async (tx: Prisma.TransactionClient) => {
       // 1. Get document
       const document = await tx.document.findUnique({
         where: { id: documentId },

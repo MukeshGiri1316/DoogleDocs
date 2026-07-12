@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { ApiError, ErrorCode, withErrorHandler } from "@/lib/errors";
 import { getSessionUser, requireDocumentRole } from "@/lib/auth-utils";
 
@@ -32,7 +33,7 @@ async function handlePost(
   const user = await getSessionUser();
   await requireDocumentRole(id, user.id, ["OWNER", "EDITOR"]);
 
-  const restoredVersion = await prisma.$transaction(async (tx) => {
+  const restoredVersion = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // Get the target version and its snapshot
     const targetVersion = await tx.version.findFirst({
       where: {

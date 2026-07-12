@@ -1,56 +1,58 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { DocumentCreateSchema } from "@/lib/validations";
 import { withErrorHandler } from "@/lib/errors";
 import { getSessionUser } from "@/lib/auth-utils";
 
-async function handleGet(): Promise<NextResponse> {
+/**
+ * GET /api/documents
+ *
+ * Lists all documents the authenticated user owns or is a member of.
+ * Returns documents sorted by last update time.
+ */
+async function listHandler(): Promise<NextResponse> {
   const user = await getSessionUser();
 
-  const memberships = await prisma.documentMember.findMany({
-    where: { userId: user.id },
+  const documents = await prisma.document.findMany({
+    where: {
+      OR: [
+        { ownerId: user.id },
+        { members: { some: { userId: user.id } } },
+      ],
+    },
     include: {
-      document: {
-        select: {
-          id: true,
-          title: true,
-          serverVersion: true,
-          ownerId: true,
-          createdAt: true,
-          updatedAt: true,
-          owner: {
-            select: { id: true, name: true, email: true },
-          },
-          _count: {
-            select: { members: true },
-          },
-        },
-      },
+      owner: { select: { id: true, name: true, email: true } },
+      _count: { select: { members: true } },
     },
-    orderBy: {
-      document: { updatedAt: "desc" },
-    },
+    orderBy: { updatedAt: "desc" },
   });
 
-  const documents = memberships.map((m) => ({
-    ...m.document,
-    role: m.role,
-    memberCount: m.document._count.members,
-  }));
+  const enriched = documents.map((doc) => {
+    const isMember = true; // Already filtered above
+    return {
+      ...doc,
+      memberCount: doc._count.members,
+      role: doc.ownerId === user.id ? "OWNER" : "EDITOR",
+    };
+  });
 
-  return NextResponse.json({ documents });
+  return NextResponse.json({ documents: enriched });
 }
 
 /**
- * Create a new document. The creator is automatically assigned the OWNER role.
- * Also creates an initial snapshot (version 0) of the empty document.
+ * POST /api/documents
+ *
+ * Creates a new document. The authenticated user becomes the owner
+ * and is automatically added as a member with OWNER role.
  */
-async function handlePost(req: Request): Promise<NextResponse> {
+async function createHandler(req: Request): Promise<NextResponse> {
   const user = await getSessionUser();
+
   const body = await req.json();
   const validated = DocumentCreateSchema.parse(body);
 
-  const document = await prisma.$transaction(async (tx) => {
+  const document = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // Create the document
     const doc = await tx.document.create({
       data: {
@@ -94,5 +96,5 @@ async function handlePost(req: Request): Promise<NextResponse> {
   );
 }
 
-export const GET = withErrorHandler(handleGet);
-export const POST = withErrorHandler(handlePost);
+export const GET = withErrorHandler(listHandler);
+export const POST = withErrorHandler(createHandler);

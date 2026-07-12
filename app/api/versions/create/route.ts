@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@prisma/client";
 import { VersionCreateSchema } from "@/lib/validations";
 import { ApiError, ErrorCode, withErrorHandler } from "@/lib/errors";
 import { getSessionUser, requireDocumentRole } from "@/lib/auth-utils";
@@ -23,7 +24,7 @@ async function handler(req: Request): Promise<NextResponse> {
   // Authorization
   await requireDocumentRole(documentId, user.id, ["OWNER", "EDITOR"]);
 
-  const version = await prisma.$transaction(async (tx) => {
+  const version = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // Get current document state
     const document = await tx.document.findUnique({
       where: { id: documentId },
