@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/lib/generated/prisma";
 import { SyncPushSchema, validateRequestSize } from "@/lib/validations";
 import { ApiError, ErrorCode, withErrorHandler } from "@/lib/errors";
 import {

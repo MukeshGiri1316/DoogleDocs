@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/lib/generated/prisma";
 import { VersionCreateSchema } from "@/lib/validations";
 import { ApiError, ErrorCode, withErrorHandler } from "@/lib/errors";
 import { getSessionUser, requireDocumentRole } from "@/lib/auth-utils";

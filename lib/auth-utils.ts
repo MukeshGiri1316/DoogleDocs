@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { ApiError, ErrorCode } from "@/lib/errors";
-import type { Role } from "@prisma/client";
+import type { Role } from "./generated/prisma";
 
 export interface SessionUser {
   id: string;
