@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+    id        String   @id @default(uuid())
+    email     String   @unique
+    name      String?
+    password  String?  // null for OAuth-only users
+    createdAt DateTime @default(now())
+
+    documentsMember  DocumentMember[]
+    operations       Operation[]
+    versions         Version[]
+    documents        Document[]
+
+    @@index([email])
+}
+
+model Document {
+    id            String   @id @default(uuid())
+    title         String
+    content       Json     @default("{}")  // materialized document state
+    serverVersion Int      @default(0)     // latest operation version counter
+    ownerId       String
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    owner      User             @relation(fields: [ownerId], references: [id])
+    members    DocumentMember[]
+    operations Operation[]
+    snapshots  Snapshot[]
+    versions   Version[]
+
+    @@index([ownerId])
+}
+
+model DocumentMember {
+    id         String @id @default(uuid())
+    documentId String
+    userId     String
+    role       Role
+
+    document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+    user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@unique([documentId, userId])
+}
+
+model Operation {
+    id         String @id @default(uuid())
+    documentId String
+    userId     String
+
+    // CRDT / OT payload
+    type    String // insert | delete | update
+    payload Json
+
+    // ordering & sync
+    clientId      String // device identifier
+    sequence      Int    // per-client ordering
+    serverVersion Int    // global version
+
+    createdAt DateTime @default(now())
+
+    document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+    user     User     @relation(fields: [userId], references: [id])
+
+    @@unique([clientId, sequence]) // prevent duplicate operations
+    @@index([documentId, serverVersion])
+}
+
+model Snapshot {
+    id         String @id @default(uuid())
+    documentId String
+
+    state   Json // full document state
+    version Int
+
+    createdAt DateTime @default(now())
+
+    document Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+    versions Version[]
+
+    @@index([documentId, version])
+}
+
+model Version {
+    id         String @id @default(uuid())
+    documentId String
+    userId     String
+
+    name       String? // "Before refactor"
+    snapshotId String
+
+    createdAt DateTime @default(now())
+
+    document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+    user     User     @relation(fields: [userId], references: [id])
+    snapshot Snapshot @relation(fields: [snapshotId], references: [id])
+}
+
+model SyncState {
+    id         String @id @default(uuid())
+    documentId String
+    userId     String
+
+    lastSyncedVersion Int
+
+    updatedAt DateTime @updatedAt
+
+    @@unique([documentId, userId])
+}
+
+enum Role {
+    OWNER
+    EDITOR
+    VIEWER
+}
