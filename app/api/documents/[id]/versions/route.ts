@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { withErrorHandler } from "@/lib/errors";
 import { getSessionUser, requireDocumentMember } from "@/lib/auth-utils";
 
+export const dynamic = "force-dynamic";
+
 interface RouteParams {
   params: Promise<{ id: string }>;
 }

@@ -5,6 +5,8 @@ import { DocumentCreateSchema } from "@/lib/validations";
 import { withErrorHandler } from "@/lib/errors";
 import { getSessionUser } from "@/lib/auth-utils";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/documents
  *
