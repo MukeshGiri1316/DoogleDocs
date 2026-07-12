@@ -3,9 +3,10 @@ import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { authConfig } from "./auth.config";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
-  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "fallback_secret_for_build_purposes_only",
+  ...authConfig,
   providers: [
     GitHub,
     Credentials({
@@ -43,16 +44,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       },
     }),
   ],
-
-  session: {
-    strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60, // 7 days
-  },
-
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
 
   callbacks: {
     async signIn({ user, account }) {

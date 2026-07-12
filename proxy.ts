@@ -1,16 +1,16 @@
-import { auth } from "@/lib/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+
+// Initialize an Edge-compatible auth check for middleware/proxy
+const { auth: edgeAuth } = NextAuth(authConfig);
 
 /**
  * Proxy (Next.js 16 convention, replaces middleware)
  *
  * Protects API routes by requiring authentication.
- *
- * Public routes (no auth required):
- * - /api/auth/* (NextAuth handles its own auth)
- *
- * All other /api/* routes require a valid session.
+ * Runs in the Edge runtime, so it must not import Node.js APIs or DB adapters.
  */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -23,8 +23,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check session for all other API routes
-  const session = await auth();
+  // Check session using the Edge-compatible auth client
+  const session = await edgeAuth();
 
   if (!session?.user?.email) {
     return NextResponse.json(
