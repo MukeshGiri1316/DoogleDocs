@@ -105,7 +105,7 @@ export default function HomePage() {
 
           <div className="flex items-center gap-4">
             <a
-              href="https://github.com/your-github-username"
+              href="https://github.com/MukeshGiri1316"
               target="_blank"
               rel="noopener noreferrer"
               className="group flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-4 py-2 text-sm transition-all hover:bg-secondary hover:border-border-hover hover:scale-[1.05]"
@@ -115,7 +115,7 @@ export default function HomePage() {
             </a>
 
             <a
-              href="https://linkedin.com/in/your-linkedin-username"
+              href="https://www.linkedin.com/in/mukesh-giri-a1593324b"
               target="_blank"
               rel="noopener noreferrer"
               className="group flex items-center gap-2 rounded-lg border border-border bg-secondary/50 px-4 py-2 text-sm transition-all hover:bg-secondary hover:border-border-hover hover:scale-[1.05]"
